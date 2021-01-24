@@ -300,8 +300,8 @@ namespace GameCaro
 
         #region AI
 
-        private int[] MangDiemTanCong = new int[7] { 0, 4, 25, 246, 7300, 6561, 59049 };
-        private int[] MangDiemPhongNgu = new int[7] { 0, 3, 24, 243, 2197, 19773, 177957 };
+        private int[] MangDiemTanCong = new int[7] { 0, 9, 54, 162, 1458, 13112, 118008 };
+        private int[] MangDiemPhongNgu = new int[7] { 0, 3, 27, 99, 729, 6561, 59049 };
         //private int[] MangDiemPhongNgu = new int[7] { 0, 1, 9, 81, 729, 6561, 59049 };
         #region Tấn công
         //duyệt ngang
