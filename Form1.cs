@@ -15,9 +15,9 @@ namespace GameCaro
     public partial class frmCaroChess : Form
     {
 
-        public static int cdStep = 100;
-        public static int cdTime = 15000;
-        public static int cdInterval = 100;
+        //public static int cdStep = 100;
+        //public static int cdTime = 15000;
+        //public static int cdInterval = 100;
         public static int ChieuRongBanCo;
         public static int ChieuCaoBanCo;
         private Graphics grs;
@@ -185,20 +185,6 @@ namespace GameCaro
         {
             
         }
-        void Listen()
-        {
 
-           
-        }
-
-        
-
-        private void tmCoolDown_Tick(object sender, EventArgs e)
-        {
-
-        }
-
-    
-        
     }
 }

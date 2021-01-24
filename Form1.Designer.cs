@@ -229,7 +229,7 @@
             // 
             // tmCoolDown
             // 
-            this.tmCoolDown.Tick += new System.EventHandler(this.tmCoolDown_Tick);
+            
             // 
             // frmCaroChess
             // 
