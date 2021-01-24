@@ -1045,9 +1045,9 @@ namespace GameCaro
             if (_cheDoChoi == 1)
             {
                 if (oco.SoHuu == 1)
-                    MessageBox.Show("Quân đỏ thắng");
-                else
                     MessageBox.Show("Quân xanh thắng");
+                else
+                    MessageBox.Show("Quân đỏ thắng");
             }
             else//chơi với máy
             {
