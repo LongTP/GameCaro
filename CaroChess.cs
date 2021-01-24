@@ -37,7 +37,7 @@ namespace GameCaro
 
         public CaroChess()
         {
-            //khởi tạo bàn cờ với số dòng 20, số cột 30
+            //khởi tạo bàn cờ với số dòng 20, số cột 20
             BanCo = new ChessBoard(frmCaroChess.ChieuCaoBanCo / ChessPiece.CHIEU_CAO, frmCaroChess.ChieuRongBanCo / ChessPiece.CHIEU_RONG);
             //khởi tạo 3 loại bút vẽ
             pen = new Pen(Color.DarkKhaki, 1);
