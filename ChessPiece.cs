@@ -9,73 +9,36 @@ namespace GameCaro
 {
     class ChessPiece
     {
-        public const int _Width = 25;
-        public const int _Height = 25;
+        public const int CHIEU_RONG = 25;
+        public const int CHIEU_CAO = 25;
 
-        private int _Row;
+        private int _dong;
 
-        public int Row
+        public int Dong
         {
-            get
-            {
-                return _Row;
-            }
+            get { return _dong; }
+            set { _dong = value; }
+        }
+        private int _cot;
 
-            set
-            {
-                _Row = value;
-            }
+        public int Cot
+        {
+            get { return _cot; }
+            set { _cot = value; }
+        }
+        private int _soHuu;
+
+        public int SoHuu
+        {
+            get { return _soHuu; }
+            set { _soHuu = value; }
         }
 
-        private int _Column;
-        public int Column
+        public ChessPiece(int Dong, int Cot, int SoHuu)
         {
-            get
-            {
-                return _Column;
-            }
-
-            set
-            {
-                _Column = value;
-            }
-        }
-
-        private Point _Position;
-        public Point Position
-        {
-            get
-            {
-                return _Position;
-            }
-
-            set
-            {
-                _Position = value;
-            }
-        }
-
-        public int Owner
-        {
-            get
-            {
-                return _Owner;
-            }
-
-            set
-            {
-                _Owner = value;
-            }
-        }
-
-        private int _Owner;
-
-        public ChessPiece(int row, int column, Point pos, int owner)
-        {
-            _Row = row;
-            _Column = column;
-            _Position = pos;
-            _Owner = owner;
+            _dong = Dong;
+            _cot = Cot;
+            _soHuu = SoHuu;
         }
 
         public ChessPiece()

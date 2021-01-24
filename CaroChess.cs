@@ -3,759 +3,1061 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GameCaro
 {
-
     class CaroChess
     {
-        public enum END
-        {
-            Draw,
-            Player1,
-            Player2
-        }
-        private END _end;
+        //3 loại bút vẽ
         public static Pen pen;
-        public static SolidBrush sbPnl;
-        private ChessPiece[,] arrChessPiece;
-        private ChessBoard chessBoard;
-        private Stack<ChessPiece> stkChessUsed;
-        private Stack<ChessPiece> stkChessUndo;
+        public static SolidBrush sbBlack;
+        public static SolidBrush sbWhite;
 
-        private int turn;
-        private bool ready;
 
-        private int mode;
-        // mode = 1 => PvP 
-        // mode = 2 => PvC
+        private Random rd = new Random();//random ô cờ máy sẽ đánh đầu tiên, và random lượt đi đầu tiên
+        private ChessBoard BanCo;
+        private ChessPiece[,] MangOCo;
+        private int _cheDoChoi;
+        private int _luotDi;
+        private bool _sanSang;
 
-        private Image ImageO = new Bitmap(Properties.Resources.o);
-        private Image ImageX = new Bitmap(Properties.Resources.x);
-        public bool Ready
+        public bool SanSang
         {
-            get { return ready; }
-            set { ready = value; }
+            get { return _sanSang; }
+            set { _sanSang = value; }
         }
+        private Stack<ChessPiece> _stkCacNuocDaDi;
 
-        public int Mode
+        public int CheDoChoi
         {
-            get
-            {
-                return mode;
-            }
+            get { return _cheDoChoi; }
+            set { _cheDoChoi = value; }
         }
 
         public CaroChess()
         {
-            pen = new Pen(Color.Black);
-            sbPnl = new SolidBrush(Color.White);
-            chessBoard = new ChessBoard(20, 20);
-            arrChessPiece = new ChessPiece[chessBoard.NumOfLines, chessBoard.NumOfColumns];
-            stkChessUsed = new Stack<ChessPiece>();
-            stkChessUndo = new Stack<ChessPiece>();
-            turn = 1;
-        }
-        // Vẽ bàn cờ
-        public void DrawChessBoard(Graphics g)
-        {
-            chessBoard.DrawChessBoard(g);
+            //khởi tạo bàn cờ với số dòng 20, số cột 30
+            BanCo = new ChessBoard(frmCaroChess.ChieuCaoBanCo / ChessPiece.CHIEU_CAO, frmCaroChess.ChieuRongBanCo / ChessPiece.CHIEU_RONG);
+            //khởi tạo 3 loại bút vẽ
+            pen = new Pen(Color.DarkKhaki, 1);
+            sbBlack = new SolidBrush(Color.Black);
+            sbWhite = new SolidBrush(Color.White);
+
+            _sanSang = false;
+            //khai báo mảng các ô cờ 
+            MangOCo = new ChessPiece[BanCo.SoDong, BanCo.SoCot];
         }
 
-        // Tạo bàn cờ bằng mảng 2 chiều
-        public void CreateChessPieces()
+        //vẽ bàn cờ
+        public void veBanCo(Graphics g)
         {
-            for (int i = 0; i < chessBoard.NumOfLines; i++)
-            {
-                for (int j = 0; j < chessBoard.NumOfColumns; j++)
+            BanCo.veBanCo(g);
+        }
+
+        //khởi tạo mảng ô cờ
+        public void khoiTaoMangOCo()
+        {
+            for (int i = 0; i < BanCo.SoDong; i++)
+                for (int j = 0; j < BanCo.SoCot; j++)
                 {
-                    arrChessPiece[i, j] = new ChessPiece(i, j, new Point(j * ChessPiece._Width, i * ChessPiece._Height), 0);
+                    MangOCo[i, j] = new ChessPiece(i, j, 0);
+                }
+        }
+
+        // đánh cờ
+        public void danhCo(Graphics g, int mouseX, int mouseY)
+        {
+            int dong = mouseY / ChessPiece.CHIEU_CAO;
+            int cot = mouseX / ChessPiece.CHIEU_RONG;
+
+            //loại bỏ trường hợp người chơi kích vào giữa đường kẻ vạch
+            if (mouseY % ChessPiece.CHIEU_CAO != 0 && mouseX % ChessPiece.CHIEU_RONG != 0)
+            {
+                //chỉ đánh vào những ô trống
+                if (MangOCo[dong, cot].SoHuu == 0)
+                {
+                    //quân đen đánh
+                    if (_luotDi == 1)
+                    {
+                        BanCo.veQuanCo(g, cot * ChessPiece.CHIEU_CAO, dong * ChessPiece.CHIEU_RONG, _luotDi);
+                        MangOCo[dong, cot].SoHuu = 1;
+
+                        //sao chép o cờ ra một vùng nhớ mới để đẩy vào stack
+                        ChessPiece OCo = new ChessPiece(MangOCo[dong, cot].Dong, MangOCo[dong, cot].Cot, MangOCo[dong, cot].SoHuu);
+                        //sau khi đánh xong thì đẩy o cờ vào trong stack
+                        _stkCacNuocDaDi.Push(OCo);
+
+                        _luotDi = 2;
+                    }
+                    //quân trắng đánh
+                    else
+                    {
+                        BanCo.veQuanCo(g, cot * ChessPiece.CHIEU_CAO, dong * ChessPiece.CHIEU_RONG, _luotDi);
+                        MangOCo[dong, cot].SoHuu = 2;
+
+                        //sao chép o cờ ra một vùng nhớ mới để đẩy vào stack
+                        ChessPiece OCo = new ChessPiece(MangOCo[dong, cot].Dong, MangOCo[dong, cot].Cot, MangOCo[dong, cot].SoHuu);
+                        //sau khi đánh xong thì đẩy o cờ vào trong stack
+                        _stkCacNuocDaDi.Push(OCo);
+
+                        _luotDi = 1;
+                    }
                 }
             }
         }
-        // Phương thức đánh cờ
-        public bool PlayChess(int mouseX, int mouseY, Graphics g)
+
+        //vẽ lại quân cờ
+        public void veLaiQuanCo(Graphics g)
         {
-            if (mouseX % ChessPiece._Width == 0 || mouseY % ChessPiece._Height == 0)
-                return false;
-            int column = mouseX / ChessPiece._Width;
-            int row = mouseY / ChessPiece._Height;
-
-            if (arrChessPiece[row, column].Owner != 0)
-                return false;
-            switch (turn)
+            //trong stack có quân cờ thì thực hiện vẽ lại quân cờ
+            if (_stkCacNuocDaDi.Count != 0)
             {
-                case 1:
-                    arrChessPiece[row, column].Owner = 1;
-                    chessBoard.DrawChess(g, arrChessPiece[row, column].Position, ImageX);
-                    turn = 2;
-                    break;
-                case 2:
-                    arrChessPiece[row, column].Owner = 2;
-                    chessBoard.DrawChess(g, arrChessPiece[row, column].Position, ImageO);
-                    turn = 1;
-                    break;
-                default:
-                    MessageBox.Show("Error!!");
-                    break;
+                foreach (ChessPiece oco in _stkCacNuocDaDi)
+                {
+                    BanCo.veQuanCo(g, oco.Cot * ChessPiece.CHIEU_RONG, oco.Dong * ChessPiece.CHIEU_CAO, oco.SoHuu);
+                }
             }
-            stkChessUndo = new Stack<ChessPiece>();
-            ChessPiece tmp = arrChessPiece[row, column];
-            ChessPiece cp = new ChessPiece(tmp.Row, tmp.Column, tmp.Position, tmp.Owner);
-            stkChessUsed.Push(cp);
+        }
 
+        //chơi với người
+        public void choiVoiNguoi(Graphics g)
+        {
+            //chơi với người
+            _cheDoChoi = 1;
+            //random lượt đi
+            _luotDi = rd.Next(0, 2);
+            if (_luotDi == 1)
+            {
+                MessageBox.Show("Quân xanh đi trước");
+            }
+            else MessageBox.Show("Quân đỏ đi trước");
+            _sanSang = true;
+            //khởi tạo mảng ô cờ
+            khoiTaoMangOCo();
+            //khởi tạo lại stack
+            _stkCacNuocDaDi = new Stack<ChessPiece>();
+            //vẽ bàn cờ
+            veBanCo(g);
+        }
+
+        //chơi với máy
+        public void choiVoiMay(Graphics g)
+        {
+            //chơi với máy
+            _cheDoChoi = 2;
+            //random lượt đi
+            _luotDi = rd.Next(0, 2);
+            if (_luotDi == 1)
+            {
+                MessageBox.Show("Máy đi trước");
+            }
+            else MessageBox.Show("Người chơi đi trước");
+
+            _sanSang = true;
+            khoiTaoMangOCo();
+            _stkCacNuocDaDi = new Stack<ChessPiece>();
+            veBanCo(g);
+            mayDanh(g);
+        }
+
+        //máy đánh
+        public void mayDanh(Graphics g)
+        {
+            int DiemMax = 0;
+            int DiemPhongNgu = 0;
+            int DiemTanCong = 0;
+            ChessPiece oco = new ChessPiece();
+
+            if (_luotDi == 1)
+            {
+                //lượt đi đầu tiên sẽ đánh random trong khoảng chính giữa đến 3 nước trên bàn cờ
+                if (_stkCacNuocDaDi.Count == 0)
+                {
+                    danhCo(g, rd.Next((BanCo.SoCot / 2 - 3) * ChessPiece.CHIEU_RONG + 1, (BanCo.SoCot / 2 + 3) * ChessPiece.CHIEU_RONG + 1), rd.Next((BanCo.SoDong / 2 - 3) * ChessPiece.CHIEU_CAO, (BanCo.SoDong / 2 + 3) * ChessPiece.CHIEU_CAO));
+                }
+                else
+                {
+                    //thuật toán minmax tìm điểm cao nhất để đánh
+                    for (int i = 0; i < BanCo.SoDong; i++)
+                    {
+                        for (int j = 0; j < BanCo.SoCot; j++)
+                        {
+                            //nếu nước cờ chưa có ai đánh và không bị cắt tỉa thì mới xét giá trị MinMax
+                            if (MangOCo[i, j].SoHuu == 0 && !catTia(MangOCo[i, j]))
+                            {
+                                int DiemTam;
+
+                                DiemTanCong = duyetTC_Ngang(i, j) + duyetTC_Doc(i, j) + duyetTC_CheoXuoi(i, j) + duyetTC_CheoNguoc(i, j);
+                                DiemPhongNgu = duyetPN_Ngang(i, j) + duyetPN_Doc(i, j) + duyetPN_CheoXuoi(i, j) + duyetPN_CheoNguoc(i, j);
+
+                                if (DiemPhongNgu > DiemTanCong)
+                                {
+                                    DiemTam = DiemPhongNgu;
+                                }
+                                else
+                                {
+                                    DiemTam = DiemTanCong;
+                                }
+
+                                if (DiemMax < DiemTam)
+                                {
+                                    DiemMax = DiemTam;
+                                    oco = new ChessPiece(MangOCo[i, j].Dong, MangOCo[i, j].Cot, MangOCo[i, j].SoHuu);
+                                }
+                            }
+                        }
+                    }
+
+                    danhCo(g, oco.Cot * ChessPiece.CHIEU_RONG + 1, oco.Dong * ChessPiece.CHIEU_CAO + 1);
+
+                }
+            }
+        }
+
+
+        #region Cắt tỉa Alpha betal
+        bool catTia(ChessPiece oCo)
+        {
+            //nếu cả 4 hướng đều không có nước cờ thì cắt tỉa
+            if (catTiaNgang(oCo) && catTiaDoc(oCo) && catTiaCheoPhai(oCo) && catTiaCheoTrai(oCo))
+                return true;
+
+            //chạy đến đây thì 1 trong 4 hướng vẫn có nước cờ thì không được cắt tỉa
+            return false;
+        }
+
+        bool catTiaNgang(ChessPiece oCo)
+        {
+            //duyệt bên phải
+            if (oCo.Cot <= BanCo.SoCot - 5)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong, oCo.Cot + i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //duyệt bên trái
+            if (oCo.Cot >= 4)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong, oCo.Cot - i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //nếu chạy đến đây tức duyệt 2 bên đều không có nước đánh thì cắt tỉa
+            return true;
+        }
+        bool catTiaDoc(ChessPiece oCo)
+        {
+            //duyệt phía giưới
+            if (oCo.Dong <= BanCo.SoDong - 5)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong + i, oCo.Cot].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //duyệt phía trên
+            if (oCo.Dong >= 4)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong - i, oCo.Cot].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //nếu chạy đến đây tức duyệt 2 bên đều không có nước đánh thì cắt tỉa
+            return true;
+        }
+        bool catTiaCheoPhai(ChessPiece oCo)
+        {
+            //duyệt từ trên xuống
+            if (oCo.Dong <= BanCo.SoDong - 5 && oCo.Cot >= 4)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong + i, oCo.Cot - i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //duyệt từ giưới lên
+            if (oCo.Cot <= BanCo.SoCot - 5 && oCo.Dong >= 4)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong - i, oCo.Cot + i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //nếu chạy đến đây tức duyệt 2 bên đều không có nước đánh thì cắt tỉa
+            return true;
+        }
+        bool catTiaCheoTrai(ChessPiece oCo)
+        {
+            //duyệt từ trên xuống
+            if (oCo.Dong <= BanCo.SoDong - 5 && oCo.Cot <= BanCo.SoCot - 5)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong + i, oCo.Cot + i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //duyệt từ giưới lên
+            if (oCo.Cot >= 4 && oCo.Dong >= 4)
+                for (int i = 1; i <= 4; i++)
+                    if (MangOCo[oCo.Dong - i, oCo.Cot - i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
+                        return false;
+
+            //nếu chạy đến đây tức duyệt 2 bên đều không có nước đánh thì cắt tỉa
             return true;
         }
 
+        #endregion
 
+        #region AI
 
-        public void RepaintChess(Graphics g)
+        private int[] MangDiemTanCong = new int[7] { 0, 4, 25, 246, 7300, 6561, 59049 };
+        private int[] MangDiemPhongNgu = new int[7] { 0, 3, 24, 243, 2197, 19773, 177957 };
+        //private int[] MangDiemPhongNgu = new int[7] { 0, 1, 9, 81, 729, 6561, 59049 };
+        #region Tấn công
+        //duyệt ngang
+        public int duyetTC_Ngang(int dongHT, int cotHT)
         {
-            foreach (ChessPiece cp in stkChessUsed)
+            int DiemTanCong = 0;
+            int SoQuanTa = 0;
+            int SoQuanDichPhai = 0;
+            int SoQuanDichTrai = 0;
+            int KhoangChong = 0;
+
+            //bên phải
+            for (int dem = 1; dem <= 4 && cotHT < BanCo.SoCot - 5; dem++)
             {
-                if (cp.Owner == 1)
-                    chessBoard.DrawChess(g, cp.Position, ImageX);
-                else if (cp.Owner == 2)
-                    chessBoard.DrawChess(g, cp.Position, ImageO);
 
-            }
-        }
-
-        public void StartPvP(Graphics g)
-        {
-            ready = true;
-            stkChessUsed = new Stack<ChessPiece>();
-            stkChessUndo = new Stack<ChessPiece>();
-            turn = 1;
-            mode = 1;
-            CreateChessPieces();
-            DrawChessBoard(g);
-        }
-
-        public void StartPvC(Graphics g)
-        {
-            ready = true;
-            stkChessUsed = new Stack<ChessPiece>();
-            stkChessUndo = new Stack<ChessPiece>();
-            turn = 1;
-            mode = 2;
-            CreateChessPieces();
-            DrawChessBoard(g);
-            LaunchComputer(g);
-        }
-
-
-        #region Undo, Redo
-        public void Undo(Graphics g)
-        {
-            if (mode == 1)
-            {
-                if (stkChessUsed.Count != 0)
+                if (MangOCo[dongHT, cotHT + dem].SoHuu == 1)
                 {
-                    if (turn == 1)
-                        turn = 2;
-                    else if (turn == 2)
-                        turn = 1;
-                    ChessPiece cp = stkChessUsed.Pop();
-                    stkChessUndo.Push(new ChessPiece(cp.Row, cp.Column, cp.Position, cp.Owner));
-                    arrChessPiece[cp.Row, cp.Column].Owner = 0;
-                    chessBoard.RemoveChess(g, cp.Position, sbPnl);
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
                 }
                 else
-                    MessageBox.Show("Bạn chưa đánh nước cờ nào!!");
-            }
-            else if (mode == 2)
-            {
-                if (stkChessUsed.Count != 0)
+                    if (MangOCo[dongHT, cotHT + dem].SoHuu == 2)
                 {
-                    ChessPiece cpC = stkChessUsed.Pop();
-                    ChessPiece cpP = stkChessUsed.Pop();
-                    stkChessUndo.Push(new ChessPiece(cpP.Row, cpP.Column, cpP.Position, cpP.Owner));
-                    stkChessUndo.Push(new ChessPiece(cpC.Row, cpC.Column, cpC.Position, cpC.Owner));
-                    arrChessPiece[cpP.Row, cpP.Column].Owner = 0;
-                    arrChessPiece[cpC.Row, cpC.Column].Owner = 0;
-                    chessBoard.RemoveChess(g, cpP.Position, sbPnl);
-                    chessBoard.RemoveChess(g, cpC.Position, sbPnl);
+                    SoQuanDichPhai++;
+                    break;
+                }
+                else KhoangChong++;
+            }
+            //bên trái
+            for (int dem = 1; dem <= 4 && cotHT > 4; dem++)
+            {
+                if (MangOCo[dongHT, cotHT - dem].SoHuu == 1)
+                {
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
                 }
                 else
-                    MessageBox.Show("Bạn chưa đánh nước cờ nào!!");
+                    if (MangOCo[dongHT, cotHT - dem].SoHuu == 2)
+                {
+                    SoQuanDichTrai++;
+                    break;
+                }
+                else KhoangChong++;
             }
+            //bị chặn 2 đầu khoảng chống không đủ tạo thành 5 nước
+            if (SoQuanDichPhai > 0 && SoQuanDichTrai > 0 && KhoangChong < 4)
+                return 0;
+
+            DiemTanCong -= MangDiemPhongNgu[SoQuanDichPhai + SoQuanDichTrai];
+            DiemTanCong += MangDiemTanCong[SoQuanTa];
+            return DiemTanCong;
         }
-        public void Redo(Graphics g)
+
+        //duyệt dọc
+        public int duyetTC_Doc(int dongHT, int cotHT)
         {
-            if (mode == 1)
+            int DiemTanCong = 0;
+            int SoQuanTa = 0;
+            int SoQuanDichTren = 0;
+            int SoQuanDichDuoi = 0;
+            int KhoangChong = 0;
+
+            //bên trên
+            for (int dem = 1; dem <= 4 && dongHT > 4; dem++)
             {
-                if (stkChessUndo.Count != 0)
+                if (MangOCo[dongHT - dem, cotHT].SoHuu == 1)
                 {
-                    if (turn == 1)
-                        turn = 2;
-                    else if (turn == 2)
-                        turn = 1;
-                    ChessPiece cp = stkChessUndo.Pop();
-                    stkChessUsed.Push(new ChessPiece(cp.Row, cp.Column, cp.Position, cp.Owner));
-                    arrChessPiece[cp.Row, cp.Column].Owner = cp.Owner;
-                    chessBoard.DrawChess(g, cp.Position, cp.Owner == 1 ? ImageX : ImageO);
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
                 }
+                else
+                    if (MangOCo[dongHT - dem, cotHT].SoHuu == 2)
+                {
+                    SoQuanDichTren++;
+                    break;
+                }
+                else KhoangChong++;
             }
-            else if (mode == 2)
+            //bên dưới
+            for (int dem = 1; dem <= 4 && dongHT < BanCo.SoDong - 5; dem++)
             {
-                if (stkChessUndo.Count != 0)
+                if (MangOCo[dongHT + dem, cotHT].SoHuu == 1)
                 {
-                    ChessPiece cpC = stkChessUndo.Pop();
-                    ChessPiece cpP = stkChessUndo.Pop();
-                    stkChessUsed.Push(new ChessPiece(cpP.Row, cpP.Column, cpP.Position, cpP.Owner));
-                    stkChessUsed.Push(new ChessPiece(cpC.Row, cpC.Column, cpC.Position, cpC.Owner));
-                    arrChessPiece[cpC.Row, cpC.Column].Owner = cpC.Owner;
-                    arrChessPiece[cpP.Row, cpP.Column].Owner = cpP.Owner;
-                    chessBoard.DrawChess(g, cpP.Position, cpP.Owner == 1 ? ImageX : ImageO);
-                    chessBoard.DrawChess(g, cpC.Position, cpC.Owner == 1 ? ImageX : ImageO);
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
                 }
+                else
+                    if (MangOCo[dongHT + dem, cotHT].SoHuu == 2)
+                {
+                    SoQuanDichDuoi++;
+                    break;
+                }
+                else KhoangChong++;
             }
+            //bị chặn 2 đầu khoảng chống không đủ tạo thành 5 nước
+            if (SoQuanDichTren > 0 && SoQuanDichDuoi > 0 && KhoangChong < 4)
+                return 0;
+
+            DiemTanCong -= MangDiemPhongNgu[SoQuanDichTren + SoQuanDichDuoi];
+            DiemTanCong += MangDiemTanCong[SoQuanTa];
+            return DiemTanCong;
+        }
+
+        //chéo xuôi
+        public int duyetTC_CheoXuoi(int dongHT, int cotHT)
+        {
+            int DiemTanCong = 1;
+            int SoQuanTa = 0;
+            int SoQuanDichCheoTren = 0;
+            int SoQuanDichCheoDuoi = 0;
+            int KhoangChong = 0;
+
+            //bên chéo xuôi xuống
+            for (int dem = 1; dem <= 4 && cotHT < BanCo.SoCot - 5 && dongHT < BanCo.SoDong - 5; dem++)
+            {
+                if (MangOCo[dongHT + dem, cotHT + dem].SoHuu == 1)
+                {
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
+                }
+                else
+                    if (MangOCo[dongHT + dem, cotHT + dem].SoHuu == 2)
+                {
+                    SoQuanDichCheoTren++;
+                    break;
+                }
+                else KhoangChong++;
+            }
+            //chéo xuôi lên
+            for (int dem = 1; dem <= 4 && dongHT > 4 && cotHT > 4; dem++)
+            {
+                if (MangOCo[dongHT - dem, cotHT - dem].SoHuu == 1)
+                {
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
+                }
+                else
+                    if (MangOCo[dongHT - dem, cotHT - dem].SoHuu == 2)
+                {
+                    SoQuanDichCheoDuoi++;
+                    break;
+                }
+                else KhoangChong++;
+            }
+            //bị chặn 2 đầu khoảng chống không đủ tạo thành 5 nước
+            if (SoQuanDichCheoTren > 0 && SoQuanDichCheoDuoi > 0 && KhoangChong < 4)
+                return 0;
+
+            DiemTanCong -= MangDiemPhongNgu[SoQuanDichCheoTren + SoQuanDichCheoDuoi];
+            DiemTanCong += MangDiemTanCong[SoQuanTa];
+            return DiemTanCong;
+        }
+
+        //chéo ngược
+        public int duyetTC_CheoNguoc(int dongHT, int cotHT)
+        {
+            int DiemTanCong = 0;
+            int SoQuanTa = 0;
+            int SoQuanDichCheoTren = 0;
+            int SoQuanDichCheoDuoi = 0;
+            int KhoangChong = 0;
+
+            //chéo ngược lên
+            for (int dem = 1; dem <= 4 && cotHT < BanCo.SoCot - 5 && dongHT > 4; dem++)
+            {
+                if (MangOCo[dongHT - dem, cotHT + dem].SoHuu == 1)
+                {
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
+                }
+                else
+                    if (MangOCo[dongHT - dem, cotHT + dem].SoHuu == 2)
+                {
+                    SoQuanDichCheoTren++;
+                    break;
+                }
+                else KhoangChong++;
+            }
+            //chéo ngược xuống
+            for (int dem = 1; dem <= 4 && cotHT > 4 && dongHT < BanCo.SoDong - 5; dem++)
+            {
+                if (MangOCo[dongHT + dem, cotHT - dem].SoHuu == 1)
+                {
+                    if (dem == 1)
+                        DiemTanCong += 37;
+
+                    SoQuanTa++;
+                    KhoangChong++;
+
+                }
+                else
+                    if (MangOCo[dongHT + dem, cotHT - dem].SoHuu == 2)
+                {
+                    SoQuanDichCheoDuoi++;
+                    break;
+                }
+                else KhoangChong++;
+            }
+            //bị chặn 2 đầu khoảng chống không đủ tạo thành 5 nước
+            if (SoQuanDichCheoTren > 0 && SoQuanDichCheoDuoi > 0 && KhoangChong < 4)
+                return 0;
+
+            DiemTanCong -= MangDiemPhongNgu[SoQuanDichCheoTren + SoQuanDichCheoDuoi];
+            DiemTanCong += MangDiemTanCong[SoQuanTa];
+            return DiemTanCong;
         }
         #endregion
 
-        #region Check Winner
-        public void EndGame()
+        #region phòng ngự
+
+        //duyệt ngang
+        public int duyetPN_Ngang(int dongHT, int cotHT)
         {
-            switch (mode)
+            int DiemPhongNgu = 0;
+            int SoQuanTaTrai = 0;
+            int SoQuanTaPhai = 0;
+            int SoQuanDich = 0;
+            int KhoangChongPhai = 0;
+            int KhoangChongTrai = 0;
+            bool ok = false;
+
+
+            for (int dem = 1; dem <= 4 && cotHT < BanCo.SoCot - 5; dem++)
             {
-                case 1:
-                    switch (_end)
+                if (MangOCo[dongHT, cotHT + dem].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT, cotHT + dem].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaTrai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongPhai++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongPhai == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            ok = false;
+
+            for (int dem = 1; dem <= 4 && cotHT > 4; dem++)
+            {
+                if (MangOCo[dongHT, cotHT - dem].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT, cotHT - dem].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaPhai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongTrai++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongTrai == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            if (SoQuanTaPhai > 0 && SoQuanTaTrai > 0 && (KhoangChongTrai + KhoangChongPhai + SoQuanDich) < 4)
+                return 0;
+
+            DiemPhongNgu -= MangDiemTanCong[SoQuanTaPhai + SoQuanTaPhai];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+
+            return DiemPhongNgu;
+        }
+
+        //duyệt dọc
+        public int duyetPN_Doc(int dongHT, int cotHT)
+        {
+            int DiemPhongNgu = 0;
+            int SoQuanTaTrai = 0;
+            int SoQuanTaPhai = 0;
+            int SoQuanDich = 0;
+            int KhoangChongTren = 0;
+            int KhoangChongDuoi = 0;
+            bool ok = false;
+
+            //lên
+            for (int dem = 1; dem <= 4 && dongHT > 4; dem++)
+            {
+                if (MangOCo[dongHT - dem, cotHT].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+
+                }
+                else
+                    if (MangOCo[dongHT - dem, cotHT].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaPhai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongTren++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongTren == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            ok = false;
+            //xuống
+            for (int dem = 1; dem <= 4 && dongHT < BanCo.SoDong - 5; dem++)
+            {
+                //gặp quân địch
+                if (MangOCo[dongHT + dem, cotHT].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT + dem, cotHT].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaTrai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongDuoi++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongDuoi == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            if (SoQuanTaPhai > 0 && SoQuanTaTrai > 0 && (KhoangChongTren + KhoangChongDuoi + SoQuanDich) < 4)
+                return 0;
+
+            DiemPhongNgu -= MangDiemTanCong[SoQuanTaTrai + SoQuanTaPhai];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+            return DiemPhongNgu;
+        }
+
+        //chéo xuôi
+        public int duyetPN_CheoXuoi(int dongHT, int cotHT)
+        {
+            int DiemPhongNgu = 0;
+            int SoQuanTaTrai = 0;
+            int SoQuanTaPhai = 0;
+            int SoQuanDich = 0;
+            int KhoangChongTren = 0;
+            int KhoangChongDuoi = 0;
+            bool ok = false;
+
+            //lên
+            for (int dem = 1; dem <= 4 && dongHT < BanCo.SoDong - 5 && cotHT < BanCo.SoCot - 5; dem++)
+            {
+                if (MangOCo[dongHT + dem, cotHT + dem].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT + dem, cotHT + dem].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaPhai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongTren++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongTren == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            ok = false;
+            //xuống
+            for (int dem = 1; dem <= 4 && dongHT > 4 && cotHT > 4; dem++)
+            {
+                if (MangOCo[dongHT - dem, cotHT - dem].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT - dem, cotHT - dem].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaTrai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongDuoi++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongDuoi == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            if (SoQuanTaPhai > 0 && SoQuanTaTrai > 0 && (KhoangChongTren + KhoangChongDuoi + SoQuanDich) < 4)
+                return 0;
+
+            DiemPhongNgu -= MangDiemTanCong[SoQuanTaPhai + SoQuanTaTrai];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+
+            return DiemPhongNgu;
+        }
+
+        //chéo ngược
+        public int duyetPN_CheoNguoc(int dongHT, int cotHT)
+        {
+            int DiemPhongNgu = 0;
+            int SoQuanTaTrai = 0;
+            int SoQuanTaPhai = 0;
+            int SoQuanDich = 0;
+            int KhoangChongTren = 0;
+            int KhoangChongDuoi = 0;
+            bool ok = false;
+
+            //lên
+            for (int dem = 1; dem <= 4 && dongHT > 4 && cotHT < BanCo.SoCot - 5; dem++)
+            {
+
+                if (MangOCo[dongHT - dem, cotHT + dem].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT - dem, cotHT + dem].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaPhai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongTren++;
+                }
+            }
+
+
+            if (SoQuanDich == 3 && KhoangChongTren == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            ok = false;
+
+            //xuống
+            for (int dem = 1; dem <= 4 && dongHT < BanCo.SoDong - 5 && cotHT > 4; dem++)
+            {
+                if (MangOCo[dongHT + dem, cotHT - dem].SoHuu == 2)
+                {
+                    if (dem == 1)
+                        DiemPhongNgu += 9;
+
+                    SoQuanDich++;
+                }
+                else
+                    if (MangOCo[dongHT + dem, cotHT - dem].SoHuu == 1)
+                {
+                    if (dem == 4)
+                        DiemPhongNgu -= 170;
+
+                    SoQuanTaTrai++;
+                    break;
+                }
+                else
+                {
+                    if (dem == 1)
+                        ok = true;
+
+                    KhoangChongDuoi++;
+                }
+            }
+
+            if (SoQuanDich == 3 && KhoangChongDuoi == 1 && ok)
+                DiemPhongNgu -= 200;
+
+            if (SoQuanTaPhai > 0 && SoQuanTaTrai > 0 && (KhoangChongTren + KhoangChongDuoi + SoQuanDich) < 4)
+                return 0;
+
+            DiemPhongNgu -= MangDiemTanCong[SoQuanTaTrai + SoQuanTaPhai];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+
+            return DiemPhongNgu;
+        }
+
+        #endregion
+
+        #endregion
+
+        #region duyệt chiến thắng theo 8 hướng
+        //kiểm tra chiến thắng
+        public bool kiemTraChienThang(Graphics g)
+        {
+            if (_stkCacNuocDaDi.Count != 0)
+            {
+                foreach (ChessPiece oco in _stkCacNuocDaDi)
+                {
+                    //duyệt theo 8 hướng mỗi quân cờ
+                    if (duyetNgangPhai(g, oco.Dong, oco.Cot, oco.SoHuu) || duyetNgangTrai(g, oco.Dong, oco.Cot, oco.SoHuu)
+                        || duyetDocTren(g, oco.Dong, oco.Cot, oco.SoHuu) || duyetDocDuoi(g, oco.Dong, oco.Cot, oco.SoHuu)
+                        || duyetCheoXuoiTren(g, oco.Dong, oco.Cot, oco.SoHuu) || duyetCheoXuoiDuoi(g, oco.Dong, oco.Cot, oco.SoHuu)
+                        || duyetCheoNguocTren(g, oco.Dong, oco.Cot, oco.SoHuu) || duyetCheoNguocDuoi(g, oco.Dong, oco.Cot, oco.SoHuu))
                     {
-                        case END.Draw:
-                            MessageBox.Show("Time out");
-                            break;
-                        case END.Player1:
-                            MessageBox.Show("Player 1 win!!");
-                            break;
-                        case END.Player2:
-                            MessageBox.Show("Player 2 win!!");
-                            break;
-
-
-                    }
-                    break;
-                case 2:
-                    switch (_end)
-                    {
-                        case END.Draw:
-                            MessageBox.Show("Time out");
-                            break;
-                        case END.Player1:
-                            MessageBox.Show("Computer win!!");
-                            break;
-                        case END.Player2:
-                            MessageBox.Show("You win!!");
-                            break;
-
-                    }
-                    break;
-                case 3:
-                    switch (_end)
-                    {
-                        case END.Draw:
-                            MessageBox.Show("Time out");
-                            break;
-                        case END.Player1:
-                            MessageBox.Show("Player 1 win!!");
-                            break;
-                        case END.Player2:
-                            MessageBox.Show("Player 2 win!!");
-                            break;
-                        default:
-                            MessageBox.Show("End Game");
-                            break;
-
-                    }
-                    break;
-            }
-
-            ready = false;
-        }
-        public bool CheckWin()
-        {
-            if (stkChessUsed.Count == chessBoard.NumOfColumns * chessBoard.NumOfLines)
-            {
-                _end = END.Draw;
-                return true;
-            }
-            foreach (ChessPiece cp in stkChessUsed)
-            {
-                if (CheckVertical(cp.Row, cp.Column, cp.Owner) || CheckHorizontal(cp.Row, cp.Column, cp.Owner) || CheckCross(cp.Row, cp.Column, cp.Owner) || CheckCrossBackwards(cp.Row, cp.Column, cp.Owner))
-                {
-                    _end = cp.Owner == 1 ? END.Player1 : END.Player2;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private bool CheckVertical(int currRow, int currColumn, int currOwner)
-        {
-            if (currRow > chessBoard.NumOfLines - 5)
-                return false;
-            int count;
-            for (count = 1; count < 5; count++)
-            {
-                if (arrChessPiece[currRow + count, currColumn].Owner != currOwner)
-                    return false;
-            }
-            if (currRow == 0 || currRow + count == chessBoard.NumOfLines)
-                return true;
-            if (arrChessPiece[currRow - 1, currColumn].Owner == 0 || arrChessPiece[currRow + count, currColumn].Owner == 0)
-                return true;
-            return false;
-        }
-
-        private bool CheckHorizontal(int currRow, int currColumn, int currOwner)
-        {
-            if (currColumn > chessBoard.NumOfColumns - 5)
-                return false;
-            int count;
-            for (count = 1; count < 5; count++)
-            {
-                if (arrChessPiece[currRow, currColumn + count].Owner != currOwner)
-                    return false;
-            }
-            if (currColumn == 0 || currColumn + count == chessBoard.NumOfColumns)
-                return true;
-            if (arrChessPiece[currRow, currColumn - 1].Owner == 0 || arrChessPiece[currRow, currColumn + count].Owner == 0)
-                return true;
-            return false;
-        }
-
-        private bool CheckCross(int currRow, int currColumn, int currOwner)
-        {
-            if (currRow > chessBoard.NumOfLines - 5 || currColumn > chessBoard.NumOfColumns - 5)
-                return false;
-            int count;
-            for (count = 1; count < 5; count++)
-            {
-                if (arrChessPiece[currRow + count, currColumn + count].Owner != currOwner)
-                    return false;
-            }
-            if (currColumn == 0 || currColumn + count == chessBoard.NumOfColumns || currRow == 0 || currRow + count == chessBoard.NumOfLines)
-                return true;
-            if (arrChessPiece[currRow - 1, currColumn - 1].Owner == 0 || arrChessPiece[currRow + count, currColumn + count].Owner == 0)
-                return true;
-            return false;
-        }
-
-        private bool CheckCrossBackwards(int currRow, int currColumn, int currOwner)
-        {
-            if (currRow < 4 || currColumn > chessBoard.NumOfColumns - 5)
-                return false;
-            int count;
-            for (count = 1; count < 5; count++)
-            {
-                if (arrChessPiece[currRow - count, currColumn + count].Owner != currOwner)
-                    return false;
-            }
-            if (currRow == 4 || currRow == chessBoard.NumOfLines - 1 || currColumn == 0 || currColumn + count == chessBoard.NumOfColumns)
-                return true;
-            if (arrChessPiece[currRow + 1, currColumn - 1].Owner == 0 || arrChessPiece[currRow - count, currColumn + count].Owner == 0)
-                return true;
-            return false;
-        }
-
-        #endregion
-
-        #region AI Computer
-        private long[] AttackPoint = new long[7] { 0, 9, 54, 162, 1458, 13112, 118008 };
-        private long[] DefensePoint = new long[7] { 0, 3, 27, 99, 729, 6561, 59049 };
-        public void LaunchComputer(Graphics g)
-        {
-            if (stkChessUsed.Count == 0)
-            {
-                PlayChess(chessBoard.NumOfColumns / 2 * ChessPiece._Height + 1, chessBoard.NumOfLines / 2 * ChessPiece._Width + 1, g);
-            }
-            else
-            {
-
-                ChessPiece cp = FindMove();
-                PlayChess(cp.Position.X + 1, cp.Position.Y + 1, g);
-
-            }
-        }
-        private ChessPiece FindMove()
-        {
-            ChessPiece cpResult = new ChessPiece();
-            long maxPoint = 0;
-            for (int i = 0; i < chessBoard.NumOfLines; i++)
-            {
-                for (int j = 0; j < chessBoard.NumOfColumns; j++)
-                {
-                    if (arrChessPiece[i, j].Owner == 0)
-                    {
-                        long attackkPoint = AtkPoint_CheckHorizontal(i, j) + AtkPoint_CheckVertical(i, j) + AtkPoint_CheckCross(i, j) + AtkPoint_CheckCrossBackward(i, j);
-                        long defensePoint = DefPoint_CheckHorizontal(i, j) + DefPoint_CheckVertical(i, j) + DefPoint_CheckCross(i, j) + DefPoint_CheckCrossBackward(i, j);
-                        long tmpPoint = attackkPoint > defensePoint ? attackkPoint : defensePoint;
-                        if (maxPoint < tmpPoint)
-                        {
-                            maxPoint = tmpPoint;
-                            cpResult = new ChessPiece(arrChessPiece[i, j].Row, arrChessPiece[i, j].Column, arrChessPiece[i, j].Position, arrChessPiece[i, j].Owner);
-
-                        }
+                        ketThucTroChoi(oco);
+                        return true;
                     }
                 }
             }
 
-            return cpResult;
+            return false;
         }
 
-        #region Attack
-        // Duyệt dọc
-        private long AtkPoint_CheckVertical(int currRow, int currColumn)
+        //vẽ đường kẻ trên 5 nước thắng
+        public void veDuongChienThang(Graphics g, int x1, int y1, int x2, int y2)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currRow + count < chessBoard.NumOfLines; count++)
-            {
-                if (arrChessPiece[currRow + count, currColumn].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow + count, currColumn].Owner == 2)
-                {
-                    enemy++;
-                    total -= 9;
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            for (int count = 1; count < 6 && currRow - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow - count, currColumn].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow - count, currColumn].Owner == 2)
-                {
-                    enemy++;
-                    total -= 9;
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (enemy == 2) return 0;
-            total -= DefensePoint[enemy];
-            total += AttackPoint[ally];
-            return total;
+            g.DrawLine(new Pen(Color.Blue, 3f), x1, y1, x2, y2);
         }
-        // Duyệt ngang
-        private long AtkPoint_CheckHorizontal(int currRow, int currColumn)
+
+        public bool duyetNgangPhai(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currColumn + count < chessBoard.NumOfColumns; count++)
+            if (cotHT > BanCo.SoCot - 5)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow, currColumn + count].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow, currColumn + count].Owner == 2)
+                if (MangOCo[dongHT, cotHT + dem].SoHuu != SoHuu)
                 {
-                    enemy++;
-                    total -= 9;
-                    break;
+                    return false;
                 }
-                else
-                {
-                    break;
-                }
+
             }
-            for (int count = 1; count < 6 && currColumn - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow, currColumn - count].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow, currColumn - count].Owner == 2)
-                {
-                    enemy++;
-                    total -= 9;
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (enemy == 2) return 0;
-            total -= DefensePoint[enemy];
-            total += AttackPoint[ally];
-            return total;
+            veDuongChienThang(g, (cotHT) * ChessPiece.CHIEU_RONG, dongHT * ChessPiece.CHIEU_CAO + ChessPiece.CHIEU_CAO / 2, (cotHT + 5) * ChessPiece.CHIEU_RONG, dongHT * ChessPiece.CHIEU_CAO + ChessPiece.CHIEU_CAO / 2);
+            return true;
         }
-        // Duyệt chéo
-        private long AtkPoint_CheckCross(int currRow, int currColumn)
+
+        public bool duyetNgangTrai(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currRow + count < chessBoard.NumOfLines && currColumn + count < chessBoard.NumOfColumns; count++)
+            if (cotHT < 4)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow + count, currColumn + count].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow + count, currColumn + count].Owner == 2)
+                if (MangOCo[dongHT, cotHT - dem].SoHuu != SoHuu)
                 {
-                    enemy++;
-                    total -= 9;
-                    break;
+                    return false;
                 }
-                else
-                {
-                    break;
-                }
+
             }
-            for (int count = 1; count < 6 && currRow - count >= 0 && currColumn - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow - count, currColumn - count].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow - count, currColumn - count].Owner == 2)
-                {
-                    enemy++;
-                    total -= 9;
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (enemy == 2) return 0;
-            total -= DefensePoint[enemy];
-            total += AttackPoint[ally];
-            return total;
+            veDuongChienThang(g, (cotHT + 1) * ChessPiece.CHIEU_RONG, dongHT * ChessPiece.CHIEU_CAO + ChessPiece.CHIEU_CAO / 2, (cotHT - 4) * ChessPiece.CHIEU_RONG, dongHT * ChessPiece.CHIEU_CAO + ChessPiece.CHIEU_CAO / 2);
+            return true;
         }
 
-        // Duyệt chéo ngược
-        private long AtkPoint_CheckCrossBackward(int currRow, int currColumn)
+        public bool duyetDocTren(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currRow - count >= 0 && currColumn + count < chessBoard.NumOfColumns; count++)
+            if (dongHT < 4)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow - count, currColumn + count].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow - count, currColumn + count].Owner == 2)
+                if (MangOCo[dongHT - dem, cotHT].SoHuu != SoHuu)
                 {
-                    enemy++;
-                    total -= 9;
-                    break;
+                    return false;
                 }
-                else
-                {
-                    break;
-                }
-            }
-            for (int count = 1; count < 6 && currRow + count < chessBoard.NumOfLines && currColumn - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow + count, currColumn - count].Owner == 1)
-                    ally++;
-                else if (arrChessPiece[currRow + count, currColumn - count].Owner == 2)
-                {
-                    enemy++;
-                    total -= 9;
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (enemy == 2) return 0;
-            total -= DefensePoint[enemy];
-            total += AttackPoint[ally];
-            return total;
-        }
-        #endregion
 
-        #region Defense
-        private long DefPoint_CheckVertical(int currRow, int currColumn)
+            }
+            veDuongChienThang(g, cotHT * ChessPiece.CHIEU_RONG + ChessPiece.CHIEU_RONG / 2, (dongHT + 1) * ChessPiece.CHIEU_CAO, cotHT * ChessPiece.CHIEU_RONG + ChessPiece.CHIEU_RONG / 2, (dongHT - 4) * ChessPiece.CHIEU_CAO);
+            return true;
+        }
+
+        public bool duyetDocDuoi(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currRow + count < chessBoard.NumOfLines; count++)
+            if (dongHT > BanCo.SoDong - 5)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow + count, currColumn].Owner == 1)
+                if (MangOCo[dongHT + dem, cotHT].SoHuu != SoHuu)
                 {
-                    ally++;
-                    break;
+                    return false;
                 }
-                else if (arrChessPiece[currRow + count, currColumn].Owner == 2)
-                {
-                    enemy++;
-                }
-                else
-                {
-                    break;
-                }
+
             }
-            for (int count = 1; count < 6 && currRow - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow - count, currColumn].Owner == 1)
-                {
-                    ally++;
-                    break;
-                }
-                else if (arrChessPiece[currRow - count, currColumn].Owner == 2)
-                {
-                    enemy++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (ally == 2) return 0;
-            total += DefensePoint[enemy];
-            if (enemy > 0)
-                total -= AttackPoint[ally] * 2;
-            return total;
+            veDuongChienThang(g, cotHT * ChessPiece.CHIEU_RONG + ChessPiece.CHIEU_RONG / 2, dongHT * ChessPiece.CHIEU_CAO, cotHT * ChessPiece.CHIEU_RONG + ChessPiece.CHIEU_RONG / 2, (dongHT + 5) * ChessPiece.CHIEU_CAO);
+            return true;
         }
-        private long DefPoint_CheckHorizontal(int currRow, int currColumn)
+
+        public bool duyetCheoXuoiTren(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currColumn + count < chessBoard.NumOfColumns; count++)
+            if (dongHT < 4 || cotHT < 4)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow, currColumn + count].Owner == 1)
+                if (MangOCo[dongHT - dem, cotHT - dem].SoHuu != SoHuu)
                 {
-                    ally++;
-                    break;
+                    return false;
                 }
-                else if (arrChessPiece[currRow, currColumn + count].Owner == 2)
-                {
-                    enemy++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            for (int count = 1; count < 6 && currColumn - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow, currColumn - count].Owner == 1)
-                {
-                    ally++;
-                    break;
-                }
-                else if (arrChessPiece[currRow, currColumn - count].Owner == 2)
-                {
-                    enemy++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (ally == 2) return 0;
-            total += DefensePoint[enemy];
-            if (enemy > 0)
-                total -= AttackPoint[ally] * 2;
 
-            return total;
+            }
+            veDuongChienThang(g, (cotHT + 1) * ChessPiece.CHIEU_RONG, (dongHT + 1) * ChessPiece.CHIEU_CAO, (cotHT - 4) * ChessPiece.CHIEU_RONG, (dongHT - 4) * ChessPiece.CHIEU_CAO);
+            return true;
         }
-        private long DefPoint_CheckCross(int currRow, int currColumn)
+
+        public bool duyetCheoXuoiDuoi(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currRow + count < chessBoard.NumOfLines && currColumn + count < chessBoard.NumOfColumns; count++)
+            if (dongHT > BanCo.SoDong - 5 || cotHT > BanCo.SoCot - 5)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow + count, currColumn + count].Owner == 1)
+                if (MangOCo[dongHT + dem, cotHT + dem].SoHuu != SoHuu)
                 {
-                    ally++;
-                    break;
+                    return false;
                 }
-                else if (arrChessPiece[currRow + count, currColumn + count].Owner == 2)
-                {
-                    enemy++;
 
-                }
-                else
-                {
-                    break;
-                }
             }
-            for (int count = 1; count < 6 && currRow - count >= 0 && currColumn - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow - count, currColumn - count].Owner == 1)
-                {
-                    ally++;
-                    break;
-                }
-                else if (arrChessPiece[currRow - count, currColumn - count].Owner == 2)
-                {
-                    enemy++;
-
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (ally == 2) return 0;
-            total += DefensePoint[enemy];
-            if (enemy > 0)
-                total -= AttackPoint[ally] * 2;
-
-            return total;
+            veDuongChienThang(g, cotHT * ChessPiece.CHIEU_RONG, dongHT * ChessPiece.CHIEU_CAO, (cotHT + 5) * ChessPiece.CHIEU_RONG, (dongHT + 5) * ChessPiece.CHIEU_CAO);
+            return true;
         }
-        private long DefPoint_CheckCrossBackward(int currRow, int currColumn)
+
+        public bool duyetCheoNguocDuoi(Graphics g, int dongHT, int cotHT, int SoHuu)
         {
-            long total = 0;
-            int ally = 0;
-            int enemy = 0;
-            for (int count = 1; count < 6 && currRow - count >= 0 && currColumn + count < chessBoard.NumOfColumns; count++)
+            if (dongHT > BanCo.SoDong - 5 || cotHT < 4)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
             {
-                if (arrChessPiece[currRow - count, currColumn + count].Owner == 1)
+                if (MangOCo[dongHT + dem, cotHT - dem].SoHuu != SoHuu)
                 {
-                    ally++;
-                    break;
+                    return false;
                 }
-                else if (arrChessPiece[currRow - count, currColumn + count].Owner == 2)
-                {
-                    enemy++;
 
-                }
-                else
-                {
-                    break;
-                }
             }
-            for (int count = 1; count < 6 && currRow + count < chessBoard.NumOfLines && currColumn - count >= 0; count++)
-            {
-                if (arrChessPiece[currRow + count, currColumn - count].Owner == 1)
-                {
-                    ally++;
-                    break;
-                }
-                else if (arrChessPiece[currRow + count, currColumn - count].Owner == 2)
-                {
-                    enemy++;
-
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (ally == 2) return 0;
-            total += DefensePoint[enemy];
-            if (enemy > 0)
-                total -= AttackPoint[ally] * 2;
-
-            return total;
+            veDuongChienThang(g, (cotHT + 1) * ChessPiece.CHIEU_RONG, dongHT * ChessPiece.CHIEU_CAO, (cotHT - 4) * ChessPiece.CHIEU_RONG, (dongHT + 5) * ChessPiece.CHIEU_CAO);
+            return true;
         }
-        #endregion
+
+        public bool duyetCheoNguocTren(Graphics g, int dongHT, int cotHT, int SoHuu)
+        {
+            if (dongHT < 4 || cotHT > BanCo.SoCot - 5)
+                return false;
+            for (int dem = 1; dem <= 4; dem++)
+            {
+                if (MangOCo[dongHT - dem, cotHT + dem].SoHuu != SoHuu)
+                {
+                    return false;
+                }
+
+            }
+            veDuongChienThang(g, cotHT * ChessPiece.CHIEU_RONG, (dongHT + 1) * ChessPiece.CHIEU_CAO, (cotHT + 5) * ChessPiece.CHIEU_RONG, (dongHT - 4) * ChessPiece.CHIEU_CAO);
+            return true;
+        }
 
         #endregion
 
+        //kết thúc trò chơi
+        public void ketThucTroChoi(ChessPiece oco)
+        {
+            //chơi với người
+            if (_cheDoChoi == 1)
+            {
+                if (oco.SoHuu == 1)
+                    MessageBox.Show("Quân đỏ thắng");
+                else
+                    MessageBox.Show("Quân xanh thắng");
+            }
+            else//chơi với máy
+            {
+                if (oco.SoHuu == 1)
+                    MessageBox.Show("Máy thắng");
+                else
+                    MessageBox.Show("Người chơi thắng");
+            }
+
+            _sanSang = false;
+        }
     }
 }

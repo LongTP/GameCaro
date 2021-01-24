@@ -9,69 +9,73 @@ namespace GameCaro
 {
     class ChessBoard
     {
-        private int _NumOfLines;
-        private int _NumOfColumns;
+        //khai báo 2 ảnh để vẽ ảnh lên bàn cờ
+        Image ImageO = new Bitmap(Properties.Resources.o);
+        Image ImageX = new Bitmap(Properties.Resources.x);
 
-        public int NumOfLines
+        private int _soDong;
+
+        public int SoDong
         {
-            get
-            {
-                return _NumOfLines;
-            }
-
-            set
-            {
-                _NumOfLines = value;
-            }
+            get { return _soDong; }
+            set { _soDong = value; }
         }
+        private int _soCot;
 
-        public int NumOfColumns
+        public int SoCot
         {
-            get
-            {
-                return _NumOfColumns;
-            }
-
-            set
-            {
-                _NumOfColumns = value;
-            }
+            get { return _soCot; }
+            set { _soCot = value; }
         }
 
         public ChessBoard()
         {
-            NumOfColumns = 0;
-            NumOfLines = 0;
-        }
-        public ChessBoard(int numOfLines, int numOFColumns)
-        {
-            NumOfColumns = numOFColumns;
-            NumOfLines = numOfLines;
+            _soCot = 0;
+            _soDong = 0;
         }
 
-        // Vẽ bàn cờ
-        public void DrawChessBoard(Graphics g)
+        public ChessBoard(int SoDong, int SoCot)
         {
-            for (int i = 0; i <= NumOfColumns; i++)
+            _soCot = SoCot;
+            _soDong = SoDong;
+        }
+
+        //vẽ bàn cờ
+        public void veBanCo(Graphics g)
+        {
+            //vẽ cột
+            for (int i = 0; i <= _soCot; i++)
             {
-                g.DrawLine(CaroChess.pen, i * ChessPiece._Width, 0, i * ChessPiece._Width, ChessPiece._Height * NumOfLines);
+                g.DrawLine(CaroChess.pen, i * ChessPiece.CHIEU_RONG, 0, i * ChessPiece.CHIEU_RONG, _soDong * ChessPiece.CHIEU_CAO);
             }
-            for (int j = 0; j <= NumOfLines; j++)
+            //vẽ dòng
+            for (int i = 0; i <= _soDong; i++)
             {
-                g.DrawLine(CaroChess.pen, 0, j * ChessPiece._Height, ChessPiece._Width * NumOfColumns, j * ChessPiece._Height);
+                g.DrawLine(CaroChess.pen, 0, i * ChessPiece.CHIEU_CAO, _soCot * ChessPiece.CHIEU_RONG, i * ChessPiece.CHIEU_CAO);
             }
         }
 
-        // Vẽ quân cờ
-        public void DrawChess(Graphics g, Point point, Image img)
+        //vẽ quân cờ
+        public void veQuanCo(Graphics g, int X, int Y, int SoHuu)
         {
-            g.DrawImage(img, point.X + 1, point.Y + 1, ChessPiece._Width - 2, ChessPiece._Height - 2);
+            //quân đen
+            if (SoHuu == 1)
+            {
+                g.DrawImage(ImageO, X, Y);
+                //g.FillEllipse(C_DieuKhien.sbBlack, X+2, Y+2, C_OCo.CHIEU_RONG-4, C_OCo.CHIEU_CAO-4);
+
+            }
+            else//quân trắng
+            {
+                //g.FillEllipse(C_DieuKhien.sbWhite, X+2, Y+2, C_OCo.CHIEU_RONG-4, C_OCo.CHIEU_CAO-4);
+                g.DrawImage(ImageX, X + 2, Y + 2);
+            }
         }
 
         // Xóa quân cờ
         public void RemoveChess(Graphics g, Point point, SolidBrush sb)
         {
-            g.FillRectangle(sb, point.X + 1, point.Y + 1, ChessPiece._Width - 2, ChessPiece._Height - 2);
+            g.FillRectangle(sb, point.X + 1, point.Y + 1, ChessPiece.CHIEU_CAO - 2, ChessPiece.CHIEU_CAO - 2);
         }
     }
 }

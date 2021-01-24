@@ -37,13 +37,9 @@
             this.PvC = new System.Windows.Forms.ToolStripMenuItem();
             this.PvP = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.undoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.redoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.prcbCoolDown = new System.Windows.Forms.ProgressBar();
             this.ptbIcon = new System.Windows.Forms.PictureBox();
             this.btnExit = new System.Windows.Forms.Button();
             this.btnComputer = new System.Windows.Forms.Button();
@@ -69,7 +65,6 @@
             // 
             this.Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.editToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.Menu.Location = new System.Drawing.Point(0, 0);
             this.Menu.Name = "Menu";
@@ -92,7 +87,7 @@
             this.PvC,
             this.PvP});
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.newToolStripMenuItem.Text = "New";
             // 
             // PvC
@@ -112,31 +107,8 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "Exit";
-            // 
-            // editToolStripMenuItem
-            // 
-            this.editToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.undoToolStripMenuItem,
-            this.redoToolStripMenuItem});
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            this.editToolStripMenuItem.Text = "Edit";
-            // 
-            // undoToolStripMenuItem
-            // 
-            this.undoToolStripMenuItem.Name = "undoToolStripMenuItem";
-            this.undoToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
-            this.undoToolStripMenuItem.Text = "Undo";
-            this.undoToolStripMenuItem.Click += new System.EventHandler(this.undoToolStripMenuItem_Click);
-            // 
-            // redoToolStripMenuItem
-            // 
-            this.redoToolStripMenuItem.Name = "redoToolStripMenuItem";
-            this.redoToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
-            this.redoToolStripMenuItem.Text = "Redo";
-            this.redoToolStripMenuItem.Click += new System.EventHandler(this.redoToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -149,14 +121,13 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.Transparent;
-            this.panel1.Controls.Add(this.prcbCoolDown);
             this.panel1.Controls.Add(this.ptbIcon);
             this.panel1.Controls.Add(this.btnExit);
             this.panel1.Controls.Add(this.btnComputer);
@@ -167,13 +138,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(235, 526);
             this.panel1.TabIndex = 9;
-            // 
-            // prcbCoolDown
-            // 
-            this.prcbCoolDown.Location = new System.Drawing.Point(17, 227);
-            this.prcbCoolDown.Name = "prcbCoolDown";
-            this.prcbCoolDown.Size = new System.Drawing.Size(206, 23);
-            this.prcbCoolDown.TabIndex = 10;
             // 
             // ptbIcon
             // 
@@ -197,7 +161,7 @@
             this.btnExit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnExit.ForeColor = System.Drawing.SystemColors.Control;
-            this.btnExit.Location = new System.Drawing.Point(123, 362);
+            this.btnExit.Location = new System.Drawing.Point(123, 348);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(100, 100);
             this.btnExit.TabIndex = 7;
@@ -216,7 +180,7 @@
             this.btnComputer.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnComputer.ForeColor = System.Drawing.SystemColors.Control;
             this.btnComputer.Image = global::GameCaro.Properties.Resources.icons8_bot_60_1_;
-            this.btnComputer.Location = new System.Drawing.Point(17, 256);
+            this.btnComputer.Location = new System.Drawing.Point(17, 242);
             this.btnComputer.Name = "btnComputer";
             this.btnComputer.Size = new System.Drawing.Size(100, 100);
             this.btnComputer.TabIndex = 5;
@@ -235,7 +199,7 @@
             this.btnNewGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNewGame.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnNewGame.ForeColor = System.Drawing.SystemColors.Control;
-            this.btnNewGame.Location = new System.Drawing.Point(17, 361);
+            this.btnNewGame.Location = new System.Drawing.Point(17, 347);
             this.btnNewGame.Name = "btnNewGame";
             this.btnNewGame.Size = new System.Drawing.Size(100, 100);
             this.btnNewGame.TabIndex = 3;
@@ -254,7 +218,7 @@
             this.btn2Player.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn2Player.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btn2Player.ForeColor = System.Drawing.SystemColors.Control;
-            this.btn2Player.Location = new System.Drawing.Point(123, 256);
+            this.btn2Player.Location = new System.Drawing.Point(123, 242);
             this.btn2Player.Name = "btn2Player";
             this.btn2Player.Size = new System.Drawing.Size(100, 100);
             this.btn2Player.TabIndex = 6;
@@ -301,9 +265,6 @@
         private System.Windows.Forms.ToolStripMenuItem PvC;
         private System.Windows.Forms.ToolStripMenuItem PvP;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem undoToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem redoToolStripMenuItem;
         private System.Windows.Forms.Button btnNewGame;
         private System.Windows.Forms.Button btn2Player;
         private System.Windows.Forms.Button btnComputer;
@@ -311,7 +272,6 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ProgressBar prcbCoolDown;
         private System.Windows.Forms.Timer tmCoolDown;
     }
 }

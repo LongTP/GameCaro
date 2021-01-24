@@ -18,22 +18,29 @@ namespace GameCaro
         public static int cdStep = 100;
         public static int cdTime = 15000;
         public static int cdInterval = 100;
-        private CaroChess caroChess;
+        public static int ChieuRongBanCo;
+        public static int ChieuCaoBanCo;
         private Graphics grs;
+        private CaroChess caroChess;
         
+
         public frmCaroChess()
         {
             InitializeComponent();
-            caroChess = new CaroChess();
-            caroChess.CreateChessPieces();
+            //vẽ nên pnlBanCo
             grs = pnlChessBoard.CreateGraphics();
-            PvC.Click += PvC_Click;
-            btnComputer.Click += PvC_Click;
+
+            //lấy chiều rộng và chiều cao pnBanCo để vẽ bàn cờ
+            ChieuCaoBanCo = pnlChessBoard.Height;
+            ChieuRongBanCo = pnlChessBoard.Width;
+
+            //khởi tạo đối tượng điều khiển trò chơi
+            caroChess = new CaroChess();
+            //PvC.Click += PvC_Click;
+            //btnComputer.Click += PvC_Click;
             exitToolStripMenuItem.Click += btnExit_Click;
-            prcbCoolDown.Step = cdStep;
-            prcbCoolDown.Maximum = cdTime;
-            prcbCoolDown.Value = 0;
-            tmCoolDown.Interval = cdInterval;
+           
+
 
 
         }
@@ -41,15 +48,18 @@ namespace GameCaro
         private void PvC_Click(object sender, EventArgs e)
         {
             grs.Clear(pnlChessBoard.BackColor);
-            caroChess.StartPvC(grs);
-            prcbCoolDown.Value = 0;
-            tmCoolDown.Start();
+            caroChess.choiVoiMay(grs);
         }
 
         private void pnlGame_Paint(object sender, PaintEventArgs e)
         {
-            caroChess.DrawChessBoard(grs);
-            caroChess.RepaintChess(grs);
+            if (caroChess.SanSang)
+            {
+                //vẽ bàn cờ
+                caroChess.veBanCo(grs);
+                //vẽ lại các quân cờ trong stack
+                caroChess.veLaiQuanCo(grs);
+            }
         }
 
         private void frmCaroChess_Load(object sender, EventArgs e)
@@ -67,66 +77,63 @@ namespace GameCaro
 
         private void pnlChessBoard_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!caroChess.Ready)
-                return;
-            if (caroChess.PlayChess(e.X, e.Y, grs))
+            if (caroChess.SanSang)
             {
-                if (caroChess.Mode == 1)
+                //chơi với người
+                if (caroChess.CheDoChoi == 1)
                 {
-                    if (caroChess.CheckWin())
+                    //đánh cờ với tọa độ chuột khi lick vào panel bàn cờ
+                    caroChess.danhCo(grs, e.Location.X, e.Location.Y);
+                    //sau khi đánh cờ thì kiểm tra chiến thắng luôn
+                    caroChess.kiemTraChienThang(grs);
+                }
+                //chơi với máy
+                else
+                {
+                    //người chơi đánh
+                    caroChess.danhCo(grs, e.Location.X, e.Location.Y);
+                    //kiểm tra người chơi chưa chiến thắng thì cho máy đánh
+                    if (!caroChess.kiemTraChienThang(grs))
                     {
-                        tmCoolDown.Stop();
-                        caroChess.EndGame();
-                        return;
+                        //máy đánh
+                        caroChess.mayDanh(grs);
+                        caroChess.kiemTraChienThang(grs);
                     }
                 }
-                else if (caroChess.Mode == 2)
-                {
-                    caroChess.LaunchComputer(grs);
-                    if (caroChess.CheckWin())
-                    {
-                        tmCoolDown.Stop();
-                        caroChess.EndGame();
-                        return;
-                    }
-                }
-              
             }
-            tmCoolDown.Start();
-            prcbCoolDown.Value = 0;
+            
         }
 
-        public void OtherPlayerMark(Point point)
-        {
-            if (!caroChess.Ready)
-                return;
-            if (caroChess.PlayChess(point.X, point.Y, grs))
-            {
-                pnlChessBoard.Enabled = true;
-                if (caroChess.CheckWin())
-                {
-                    tmCoolDown.Stop();
-                    caroChess.EndGame();
-                }
-            }
-        }
+        //public void OtherPlayerMark(Point point)
+        //{
+        //    if (!caroChess.Ready)
+        //        return;
+        //    if (caroChess.PlayChess(point.X, point.Y, grs))
+        //    {
+        //        pnlChessBoard.Enabled = true;
+        //        if (caroChess.CheckWin())
+        //        {
+        //            tmCoolDown.Stop();
+        //            caroChess.EndGame();
+        //        }
+        //    }
+        //}
         private void PvsP(object sender, EventArgs e)
         {
             grs.Clear(pnlChessBoard.BackColor);
-            caroChess.StartPvP(grs);
-            prcbCoolDown.Value = 0;
-            tmCoolDown.Start();
+            caroChess.choiVoiNguoi(grs);
+           
 
         }
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            caroChess.Undo(grs);
+            //caroChess.Undo(grs);
         }
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            caroChess.Redo(grs);
+            //caroChess.Redo(grs);
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -144,28 +151,26 @@ namespace GameCaro
         {
             grs.Clear(pnlChessBoard.BackColor);
             
-            tmCoolDown.Start();
-            prcbCoolDown.Value = 0;
+            
         }
         private void btnNewGame_Click(object sender, EventArgs e)
         {
 
-            if (caroChess.Mode == 0)
+            if (caroChess.CheDoChoi == 0)
             {
                 MessageBox.Show("Chưa chọn chế độ chơi!", "Thông báo");
             }
-            else if (caroChess.Mode == 1)
+            else if (caroChess.CheDoChoi == 1)
             {
                 grs.Clear(pnlChessBoard.BackColor);
-                caroChess.StartPvP(grs);
+                caroChess.choiVoiNguoi(grs);
             }
-            else if(caroChess.Mode == 2)
+            else if(caroChess.CheDoChoi == 2)
             {
                 grs.Clear(pnlChessBoard.BackColor);
-                caroChess.StartPvC(grs);
+                caroChess.choiVoiMay(grs);
             }
-            tmCoolDown.Start();
-            prcbCoolDown.Value = 0;
+            
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -190,14 +195,7 @@ namespace GameCaro
 
         private void tmCoolDown_Tick(object sender, EventArgs e)
         {
-            prcbCoolDown.PerformStep();
 
-            if (prcbCoolDown.Value >= prcbCoolDown.Maximum)
-            {
-                tmCoolDown.Stop();
-                caroChess.EndGame();
-
-            }
         }
 
     
