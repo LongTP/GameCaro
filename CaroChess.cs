@@ -246,7 +246,7 @@ namespace GameCaro
         }
         bool catTiaDoc(ChessPiece oCo)
         {
-            //duyệt phía giưới
+            //duyệt phía dưới
             if (oCo.Dong <= BanCo.SoDong - 5)
                 for (int i = 1; i <= 4; i++)
                     if (MangOCo[oCo.Dong + i, oCo.Cot].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
@@ -269,7 +269,7 @@ namespace GameCaro
                     if (MangOCo[oCo.Dong + i, oCo.Cot - i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
                         return false;
 
-            //duyệt từ giưới lên
+            //duyệt từ dưới lên
             if (oCo.Cot <= BanCo.SoCot - 5 && oCo.Dong >= 4)
                 for (int i = 1; i <= 4; i++)
                     if (MangOCo[oCo.Dong - i, oCo.Cot + i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
@@ -286,7 +286,7 @@ namespace GameCaro
                     if (MangOCo[oCo.Dong + i, oCo.Cot + i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
                         return false;
 
-            //duyệt từ giưới lên
+            //duyệt từ dưới lên
             if (oCo.Cot >= 4 && oCo.Dong >= 4)
                 for (int i = 1; i <= 4; i++)
                     if (MangOCo[oCo.Dong - i, oCo.Cot - i].SoHuu != 0)//nếu có nước cờ thì không cắt tỉa
