@@ -617,7 +617,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaPhai + SoQuanTaPhai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich + 1];
 
             return DiemPhongNgu;
         }
@@ -702,7 +702,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaTrai + SoQuanTaPhai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich + 1];
             return DiemPhongNgu;
         }
 
@@ -784,7 +784,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaPhai + SoQuanTaTrai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich + 1];
 
             return DiemPhongNgu;
         }
@@ -870,7 +870,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaTrai + SoQuanTaPhai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich + 1];
 
             return DiemPhongNgu;
         }
