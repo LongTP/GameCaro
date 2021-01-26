@@ -77,7 +77,7 @@ namespace GameCaro
                 //chỉ đánh vào những ô trống
                 if (MangOCo[dong, cot].SoHuu == 0)
                 {
-                    //quân đen đánh
+                    //quân xanh đánh
                     if (_luotDi == 1)
                     {
                         BanCo.veQuanCo(g, cot * ChessPiece.CHIEU_CAO, dong * ChessPiece.CHIEU_RONG, _luotDi);
@@ -90,7 +90,7 @@ namespace GameCaro
 
                         _luotDi = 2;
                     }
-                    //quân trắng đánh
+                    //quân đỏ đánh
                     else
                     {
                         BanCo.veQuanCo(g, cot * ChessPiece.CHIEU_CAO, dong * ChessPiece.CHIEU_RONG, _luotDi);
@@ -617,7 +617,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaPhai + SoQuanTaPhai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
 
             return DiemPhongNgu;
         }
@@ -702,7 +702,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaTrai + SoQuanTaPhai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
             return DiemPhongNgu;
         }
 
@@ -784,7 +784,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaPhai + SoQuanTaTrai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
 
             return DiemPhongNgu;
         }
@@ -870,7 +870,7 @@ namespace GameCaro
                 return 0;
 
             DiemPhongNgu -= MangDiemTanCong[SoQuanTaTrai + SoQuanTaPhai];
-            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich];
+            DiemPhongNgu += MangDiemPhongNgu[SoQuanDich]*2;
 
             return DiemPhongNgu;
         }

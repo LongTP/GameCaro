@@ -58,14 +58,14 @@ namespace GameCaro
         //vẽ quân cờ
         public void veQuanCo(Graphics g, int X, int Y, int SoHuu)
         {
-            //quân đen
+            //quân xanh
             if (SoHuu == 1)
             {
                 g.DrawImage(ImageO, X, Y);
                 //g.FillEllipse(C_DieuKhien.sbBlack, X+2, Y+2, C_OCo.CHIEU_RONG-4, C_OCo.CHIEU_CAO-4);
 
             }
-            else//quân trắng
+            else//quân đỏ
             {
                 //g.FillEllipse(C_DieuKhien.sbWhite, X+2, Y+2, C_OCo.CHIEU_RONG-4, C_OCo.CHIEU_CAO-4);
                 g.DrawImage(ImageX, X + 2, Y + 2);
